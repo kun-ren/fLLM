@@ -11,7 +11,7 @@ def download_blob(bucket_name, source_blob_name, destination_file_name):
     bucket = client.bucket(bucket_name)
     blob = bucket.blob(source_blob_name)
     blob.download_to_filename(destination_file_name)
-    logging.info(f"FILE: {source_blob_name} has been downloaded to {destination_file_name}.")
+    logging.info(msg=f"FILE: {source_blob_name} has been downloaded to {destination_file_name}.")
 
 
 def download_to_dataframe(bucket_name, blob_name) -> pd.DataFrame:
@@ -39,7 +39,7 @@ def upload_blob(bucket_name, destination_blob_name, source_file_name):
     bucket = client.bucket(bucket_name)
     blob = bucket.blob(destination_blob_name)
     blob.upload_from_filename(source_file_name)
-    logging.info(f"FILE: {source_file_name} uploaded to {destination_blob_name}.")
+    logging.info(msg=f"FILE: {source_file_name} uploaded to {destination_blob_name}.")
 
 
 def upload_dataframe(bucket_name, blob_name, df: pd.DataFrame):
@@ -51,4 +51,4 @@ def upload_dataframe(bucket_name, blob_name, df: pd.DataFrame):
     df.to_parquet(buffer, index=False)
     buffer.seek(0)
     blob.upload_from_file(buffer, content_type="application/octet-stream")
-    logging.info(f"DataFrame uploaded to gs://{bucket_name}/{blob_name} ({len(df)} rows).")
+    logging.info(msg=f"DataFrame uploaded to gs://{bucket_name}/{blob_name} ({len(df)} rows).")

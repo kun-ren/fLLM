@@ -60,7 +60,7 @@ def train_crossformer_rl(run_id=None):
     tp_bps = config.get("loss_take_profit_bps").value
     sl_bps = config.get("loss_stop_loss_bps").value
 
-    logging.log(f"Model: d_model={d_model}, n_heads={n_heads}, n_layers={n_layers}")
+    logging.log(msg=f"Model: d_model={d_model}, n_heads={n_heads}, n_layers={n_layers}")
 
     data, close_col = preprocess_dataframe()
     dataset = OHLCDataset(data, close_col, device=device)
@@ -157,7 +157,7 @@ def train_crossformer_rl(run_id=None):
                  "hyperparams": config.resolve_all()},
                 checkpoint_path,
             )
-            logging.info(f"  -> New best loss: {avg_loss:.6f} (epoch {epoch})")
+            logging.info(msg=f"  -> New best loss: {avg_loss:.6f} (epoch {epoch})")
 
         # Yield progress update with only current progress and loss
         yield {
@@ -171,7 +171,7 @@ def train_crossformer_rl(run_id=None):
 
         scheduler.step()
 
-    logging.info(f"Training complete. Best loss: {best_loss:.6f} at epoch {best_epoch}")
+    logging.info(msg=f"Training complete. Best loss: {best_loss:.6f} at epoch {best_epoch}")
 
     # Final completion report with all metrics
     yield {
