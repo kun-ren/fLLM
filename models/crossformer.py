@@ -6,7 +6,7 @@ from torch.utils.data import DataLoader
 
 from data_processing.dataset import OHLCDataset, preprocess_dataframe
 from controller.config_manager import get_config_manager
-from crossformer_lib.encoder import Encoder as CrossformerEncoder
+from models.crossformer_lib.encoder import Encoder as CrossformerEncoder
 from models.reversal_loss import ReversalLoss
 from models.task_heads import MultiTaskHead
 
