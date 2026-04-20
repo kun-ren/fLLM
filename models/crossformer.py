@@ -90,6 +90,8 @@ def train_crossformer_rl(run_id=None):
         router=router
     ).to(device)
 
+    dsw_embedding = DSW_embedding(seq_len, d_model)
+
     taskheads = MultiTaskHead(
         heads=['reversal', 'support', 'resistance'],
         d_model=d_model,
@@ -128,7 +130,7 @@ def train_crossformer_rl(run_id=None):
             batch_data = batch_data.to(device)
             reference_k = reference_k.to(device)
 
-            x_embeded = DSW_embedding(batch_data)
+            x_embeded = dsw_embedding(batch_data)
             embedding = encoder(x_embeded)
             out = taskheads(embedding)
             loss, _ = loss_fn(out, reference_k, volatility_50)
