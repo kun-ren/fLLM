@@ -6,6 +6,7 @@ from torch.utils.data import DataLoader
 
 from data_processing.dataset import OHLCDataset, preprocess_dataframe
 from controller.config_manager import get_config_manager
+from models.crossformer_lib.embeding import DSW_embedding
 from models.crossformer_lib.encoder import Encoder as CrossformerEncoder
 from models.reversal_loss import ReversalLoss
 from models.task_heads import MultiTaskHead
@@ -60,7 +61,7 @@ def train_crossformer_rl(run_id=None):
     tp_bps = config.get("loss_take_profit_bps").value
     sl_bps = config.get("loss_stop_loss_bps").value
 
-    logging.info(msg=f"Model: d_model={d_model}, n_heads={n_heads}, n_layers={n_layers}")
+    print(f"Model: d_model={d_model}, n_heads={n_heads}, n_layers={n_layers}")
 
     data, close_col = preprocess_dataframe()
     dataset = OHLCDataset(data, close_col, device=device)
@@ -127,8 +128,8 @@ def train_crossformer_rl(run_id=None):
             batch_data = batch_data.to(device)
             reference_k = reference_k.to(device)
 
-            logging.info(f"batch data size: {batch_data.shape}")
-            embedding = encoder(batch_data)
+            x_embeded = DSW_embedding(batch_data)
+            embedding = encoder(x_embeded)
             out = taskheads(embedding)
             loss, _ = loss_fn(out, reference_k, volatility_50)
 
