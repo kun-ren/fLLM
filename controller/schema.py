@@ -120,7 +120,7 @@ SCHEMA: dict[str, HyperParam] = {
     ),
     "sliding_window": HyperParam(
         name="sliding_window",
-        value=False,
+        value=True,
         description="Use sliding window sampling",
         group="Data",
     ),

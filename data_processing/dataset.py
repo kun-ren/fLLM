@@ -153,7 +153,7 @@ class OHLCDataset(Dataset):
 
         else:
             # 计算可用样本量
-            self.num_samples = len(self.data) - self.seq_len - self.num_look_ahead + 1
+            self.num_samples = (len(self.data) - self.num_look_ahead) // self.seq_len
 
             for i in range(self.num_samples):
                 start = i * self.seq_len
