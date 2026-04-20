@@ -2,8 +2,9 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from einops import rearrange, repeat
-from cross_models.attn import FullAttention, AttentionLayer, TwoStageAttentionLayer
 from math import ceil
+
+from models.crossformer_lib.attentation import TwoStageAttentionLayer
 
 
 class SegMerging(nn.Module):
