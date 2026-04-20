@@ -32,8 +32,8 @@ class Crossformer(nn.Module):
         self.in_len_add = self.pad_in_len - self.in_len
 
         # Embedding
-        self.enc_value_embedding = DSW_embedding(seg_len, d_model)
-        self.enc_pos_embedding = nn.Parameter(torch.randn(1, data_dim, (self.pad_in_len // seg_len), d_model))
+        self.enc_value_embedding = DSW_embedding(seg_len, d_model).to(device=device)
+        #self.enc_pos_embedding = nn.Parameter(torch.randn(1, data_dim, (self.pad_in_len // seg_len), d_model))
         self.pre_norm = nn.LayerNorm(d_model)
 
         # Encoder

@@ -90,7 +90,7 @@ def train_crossformer_rl(run_id=None):
         router=router
     ).to(device)
 
-    dsw_embedding = DSW_embedding(seq_len, d_model)
+    dsw_embedding = DSW_embedding(seq_len, d_model).to(device=device)
 
     taskheads = MultiTaskHead(
         heads=['reversal', 'support', 'resistance'],
@@ -101,9 +101,9 @@ def train_crossformer_rl(run_id=None):
         pooling=pooling,
         n_heads=n_heads,
         d_layers=n_layers
-    )
+    ).to(device=device)
 
-    loss_fn = ReversalLoss(L=num_look_ahead)
+    loss_fn = ReversalLoss(L=num_look_ahead).to(device=device)
 
     optimizer = torch.optim.AdamW(
         [{"params": encoder.parameters(), "lr": lr},
