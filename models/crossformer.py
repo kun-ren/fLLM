@@ -60,7 +60,7 @@ def train_crossformer_rl(run_id=None):
     tp_bps = config.get("loss_take_profit_bps").value
     sl_bps = config.get("loss_stop_loss_bps").value
 
-    logging.log(msg=f"Model: d_model={d_model}, n_heads={n_heads}, n_layers={n_layers}")
+    logging.info(msg=f"Model: d_model={d_model}, n_heads={n_heads}, n_layers={n_layers}")
 
     data, close_col = preprocess_dataframe()
     dataset = OHLCDataset(data, close_col, device=device)
