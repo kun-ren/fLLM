@@ -127,7 +127,15 @@ class OHLCDataset(Dataset):
         self.device = device
 
         returns = self.close_col.diff()
-        self.volatility_50 = returns.rolling(50, min_periods=1).std()
+        window_size = 50
+        padded_returns = torch.nn.functional.pad(returns, (window_size - 1, 0))
+
+        # Create sliding windows of size 50
+        # .unfold(dimension, size, step)
+        windows = padded_returns.unfold(0, window_size, 1)
+
+        # Calculate the standard deviation along the window dimension (dim=1)
+        self.volatility_50 = windows.std(dim=1, unbiased=True)
 
         look_ahead_k = self.close_col.unfold(0, self.num_look_ahead + 1, 1)
         look_ahead_k = look_ahead_k[:, 1:]  # remove itself, [N, K]
