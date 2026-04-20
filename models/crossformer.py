@@ -127,6 +127,7 @@ def train_crossformer_rl(run_id=None):
             batch_data = batch_data.to(device)
             reference_k = reference_k.to(device)
 
+            logging.info(f"batch data size: {batch_data.shape}")
             embedding = encoder(batch_data)
             out = taskheads(embedding)
             loss, _ = loss_fn(out, reference_k, volatility_50)
