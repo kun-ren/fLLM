@@ -108,7 +108,7 @@ class OHLCDataset(Dataset):
         config = get_config_manager()
         seq_len = config.get("seq_len").value
         sliding_step = config.get("sliding_step").value
-        pred_len_param = config.get("pred_len")
+        pred_len_param = config.get("num_look_ahead")
         pred_len = pred_len_param.value if pred_len_param else 1
         use_last_n = config.get("use_last_n").value
         normalize = config.get("normalize").value
