@@ -1,0 +1,422 @@
+{
+  "dataset_filetype": {
+    "name": "dataset_filetype",
+    "value": "csv",
+    "min_val": null,
+    "max_val": null,
+    "step": null,
+    "mode": "single",
+    "description": "Dataset file type (csv / parquet / feather)",
+    "group": "Data"
+  },
+  "train_dataset_path": {
+    "name": "train_dataset_path",
+    "value": "data/Binance_BTC_USDT_USDT_3m.csv",
+    "min_val": null,
+    "max_val": null,
+    "step": null,
+    "mode": "single",
+    "description": "Path to OHLC CSV file",
+    "group": "Data"
+  },
+  "test_dataset_path": {
+    "name": "test_dataset_path",
+    "value": "data/Binance_BTC_USDT_USDT_3m.csv",
+    "min_val": null,
+    "max_val": null,
+    "step": null,
+    "mode": "single",
+    "description": "Path to test OHLC CSV file",
+    "group": "Data"
+  },
+  "use_last_n": {
+    "name": "use_last_n",
+    "value": false,
+    "min_val": null,
+    "max_val": null,
+    "step": null,
+    "mode": "single",
+    "description": "Use last N rows of CSV ",
+    "group": "Data"
+  },
+  "use_last_n_num": {
+    "name": "use_last_n_num",
+    "value": null,
+    "min_val": 1000,
+    "max_val": 1000000,
+    "step": 1000,
+    "mode": "single",
+    "description": "Use last N rows of CSV to train ",
+    "group": "Data"
+  },
+  "normalize": {
+    "name": "normalize",
+    "value": true,
+    "min_val": null,
+    "max_val": null,
+    "step": null,
+    "mode": "single",
+    "description": "Z-score normalize volume features",
+    "group": "Data"
+  },
+  "seq_len": {
+    "name": "seq_len",
+    "value": 64,
+    "min_val": 8,
+    "max_val": 512,
+    "step": 8,
+    "mode": "single",
+    "description": "Input sequence length",
+    "group": "Data"
+  },
+  "sliding_window": {
+    "name": "sliding_window",
+    "value": false,
+    "min_val": null,
+    "max_val": null,
+    "step": null,
+    "mode": "single",
+    "description": "Use sliding window sampling",
+    "group": "Data"
+  },
+  "sliding_step": {
+    "name": "sliding_step",
+    "value": 1,
+    "min_val": 1,
+    "max_val": 64,
+    "step": 1,
+    "mode": "single",
+    "description": "Step size for sliding window",
+    "group": "Data"
+  },
+  "num_look_ahead": {
+    "name": "num_look_ahead",
+    "value": 10,
+    "min_val": 1,
+    "max_val": 50,
+    "step": 1,
+    "mode": "single",
+    "description": "Number of future steps for profit reference",
+    "group": "Data"
+  },
+  "gcs_bucket_name": {
+    "name": "gcs_bucket_name",
+    "value": "binance-histrial-files",
+    "min_val": null,
+    "max_val": null,
+    "step": null,
+    "mode": "single",
+    "description": "GCS bucket name for data download",
+    "group": "GCS"
+  },
+  "gcs_blob_prefix": {
+    "name": "gcs_blob_prefix",
+    "value": "aggTrades/BTCUSDT",
+    "min_val": null,
+    "max_val": null,
+    "step": null,
+    "mode": "single",
+    "description": "Blob prefix path within bucket",
+    "group": "GCS"
+  },
+  "gcs_destination_dir": {
+    "name": "gcs_destination_dir",
+    "value": "data",
+    "min_val": null,
+    "max_val": null,
+    "step": null,
+    "mode": "single",
+    "description": "Local directory to save downloaded files",
+    "group": "GCS"
+  },
+  "aggregation_level": {
+    "name": "aggregation_level",
+    "value": 4,
+    "min_val": 2,
+    "max_val": 10,
+    "step": 1,
+    "mode": "single",
+    "description": "Crossformer hierarchical attention aggregation_level(num of time series samples)",
+    "group": "Model"
+  },
+  "num_tsa_layer": {
+    "name": "num_tsa_layer",
+    "value": 1,
+    "min_val": 1,
+    "max_val": 10,
+    "step": 1,
+    "mode": "single",
+    "description": "num_tsa_layer",
+    "group": "Model"
+  },
+  "router": {
+    "name": "router",
+    "value": false,
+    "min_val": null,
+    "max_val": null,
+    "step": null,
+    "mode": "single",
+    "description": "router",
+    "group": "Model"
+  },
+  "factor": {
+    "name": "factor",
+    "value": 1,
+    "min_val": 4,
+    "max_val": 10,
+    "step": 1,
+    "mode": "single",
+    "description": "num_routers",
+    "group": "Model"
+  },
+  "d_model": {
+    "name": "d_model",
+    "value": 64,
+    "min_val": 32,
+    "max_val": 256,
+    "step": 32,
+    "mode": "single",
+    "description": "Model embedding dimension",
+    "group": "Model"
+  },
+  "n_heads": {
+    "name": "n_heads",
+    "value": 8,
+    "min_val": 1,
+    "max_val": 16,
+    "step": 1,
+    "mode": "single",
+    "description": "Number of attention heads",
+    "group": "Model"
+  },
+  "n_layers": {
+    "name": "n_layers",
+    "value": 4,
+    "min_val": 1,
+    "max_val": 12,
+    "step": 1,
+    "mode": "single",
+    "description": "Number of transformer layers",
+    "group": "Model"
+  },
+  "dim_feedforward": {
+    "name": "dim_feedforward",
+    "value": 128,
+    "min_val": 64,
+    "max_val": 512,
+    "step": 64,
+    "mode": "single",
+    "description": "Feedforward hidden dimension",
+    "group": "Model"
+  },
+  "hidden_dim": {
+    "name": "hidden_dim",
+    "value": 128,
+    "min_val": 32,
+    "max_val": 512,
+    "step": 32,
+    "mode": "single",
+    "description": "Embedding head hidden dimension",
+    "group": "Model"
+  },
+  "dropout": {
+    "name": "dropout",
+    "value": 0.1,
+    "min_val": 0.0,
+    "max_val": 0.5,
+    "step": 0.05,
+    "mode": "single",
+    "description": "Dropout rate",
+    "group": "Model"
+  },
+  "pooling": {
+    "name": "pooling",
+    "value": "AttentionPooling",
+    "min_val": null,
+    "max_val": null,
+    "step": null,
+    "mode": "single",
+    "description": "Pooling strategy for sequence embeddings",
+    "group": "Model"
+  },
+  "lr": {
+    "name": "lr",
+    "value": 0.001,
+    "min_val": 1e-05,
+    "max_val": 0.01,
+    "step": null,
+    "mode": "single",
+    "description": "Learning rate (log scale)",
+    "group": "Optimizer"
+  },
+  "weight_decay": {
+    "name": "weight_decay",
+    "value": 0.05,
+    "min_val": 0.0,
+    "max_val": 0.5,
+    "step": 0.01,
+    "mode": "single",
+    "description": "L2 weight decay",
+    "group": "Optimizer"
+  },
+  "betas": {
+    "name": "betas",
+    "value": "0.9, 0.999",
+    "min_val": null,
+    "max_val": null,
+    "step": null,
+    "mode": "single",
+    "description": "AdamW beta coefficients (comma-separated)",
+    "group": "Optimizer"
+  },
+  "eps": {
+    "name": "eps",
+    "value": 1e-08,
+    "min_val": 1e-10,
+    "max_val": 1e-06,
+    "step": null,
+    "mode": "single",
+    "description": "AdamW epsilon for numerical stability",
+    "group": "Optimizer"
+  },
+  "batch_size": {
+    "name": "batch_size",
+    "value": 64,
+    "min_val": 4,
+    "max_val": 256,
+    "step": 4,
+    "mode": "single",
+    "description": "Training batch size",
+    "group": "Training"
+  },
+  "epochs": {
+    "name": "epochs",
+    "value": 10,
+    "min_val": 1,
+    "max_val": 100,
+    "step": 1,
+    "mode": "single",
+    "description": "Number of training epochs",
+    "group": "Training"
+  },
+  "device": {
+    "name": "device",
+    "value": "cuda",
+    "min_val": null,
+    "max_val": null,
+    "step": null,
+    "mode": "single",
+    "description": "Device (cuda / cpu)",
+    "group": "Training"
+  },
+  "save_dir": {
+    "name": "save_dir",
+    "value": "checkpoints",
+    "min_val": null,
+    "max_val": null,
+    "step": null,
+    "mode": "single",
+    "description": "Directory to save model checkpoints",
+    "group": "Training"
+  },
+  "threshold_bps": {
+    "name": "threshold_bps",
+    "value": 2.0,
+    "min_val": 0.1,
+    "max_val": 20.0,
+    "step": 0.1,
+    "mode": "single",
+    "description": "Profit normalization threshold (bps)",
+    "group": "Loss"
+  },
+  "stop_loss_bps": {
+    "name": "stop_loss_bps",
+    "value": 10.0,
+    "min_val": 1.0,
+    "max_val": 50.0,
+    "step": 1.0,
+    "mode": "single",
+    "description": "Stop-loss threshold in bps",
+    "group": "Loss"
+  },
+  "loss_take_profit_bps": {
+    "name": "loss_take_profit_bps",
+    "value": 5.0,
+    "min_val": 0.5,
+    "max_val": 50.0,
+    "step": 0.5,
+    "mode": "single",
+    "description": "Take-profit cap in loss function (bps)",
+    "group": "Loss"
+  },
+  "loss_stop_loss_bps": {
+    "name": "loss_stop_loss_bps",
+    "value": 10.0,
+    "min_val": 1.0,
+    "max_val": 50.0,
+    "step": 1.0,
+    "mode": "single",
+    "description": "Stop-loss cap in loss function (bps)",
+    "group": "Loss"
+  },
+  "confidence_threshold": {
+    "name": "confidence_threshold",
+    "value": 0.6,
+    "min_val": 0.0,
+    "max_val": 1.0,
+    "step": 0.05,
+    "mode": "single",
+    "description": "Min confidence to execute trade",
+    "group": "Backtest"
+  },
+  "take_profit": {
+    "name": "take_profit",
+    "value": 4.0,
+    "min_val": 0.5,
+    "max_val": 50.0,
+    "step": 0.5,
+    "mode": "single",
+    "description": "Take-profit threshold (bps)",
+    "group": "Backtest"
+  },
+  "take_loss": {
+    "name": "take_loss",
+    "value": -50.0,
+    "min_val": -200.0,
+    "max_val": -1.0,
+    "step": 1.0,
+    "mode": "single",
+    "description": "Stop-loss threshold (bps, negative)",
+    "group": "Backtest"
+  },
+  "margin": {
+    "name": "margin",
+    "value": 15.0,
+    "min_val": 1.0,
+    "max_val": 100.0,
+    "step": 1.0,
+    "mode": "single",
+    "description": "Margin parameter",
+    "group": "Backtest"
+  },
+  "commission_rate": {
+    "name": "commission_rate",
+    "value": 0.0004,
+    "min_val": 0.0,
+    "max_val": 0.005,
+    "step": 0.0001,
+    "mode": "single",
+    "description": "Commission rate per trade (e.g. 0.04% = 0.0004)",
+    "group": "Backtest"
+  },
+  "threshold_sweep_values": {
+    "name": "threshold_sweep_values",
+    "value": "0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9",
+    "min_val": null,
+    "max_val": null,
+    "step": null,
+    "mode": "single",
+    "description": "Comma-separated confidence thresholds for sweep analysis",
+    "group": "Backtest"
+  }
+}

@@ -1,113 +1,165 @@
 import ast
 import os
 import logging
-
 import numpy as np
 
-from config.googleCloud import download_blob, get_latest_blob_path
-
+# from config.googleCloud import download_blob, get_latest_blob_path
+import torch.nn.functional as F
 import pandas as pd
 import torch
 from torch.utils.data import Dataset
+
+from controller.config_manager import get_config_manager
 from models.functions import power_distance
 
 
-class OHLCDataset(Dataset):
-    def __init__(self,
-                 csv_path,
-                 seq_len=64,
-                 sliding_step=1,
-                 pred_len=1,
-                 use_last_n=None,  # use the last n items only
-                 normalize=False,
-                 sliding_window=False):
+def _extract_time_features(dates):
+    """ convert timestamp to periodic time feature  (scale to [-0.5, 0.5])"""
+    df_stamp = pd.DataFrame()
+    df_stamp['month'] = dates.dt.month / 12 - 0.5
+    df_stamp['day'] = dates.dt.day / 31 - 0.5
+    df_stamp['weekday'] = dates.dt.weekday / 7 - 0.5
+    df_stamp['hour'] = dates.dt.hour / 24 - 0.5
+    return df_stamp.values
 
+
+def preprocess_dataframe(device=None):
+    config = get_config_manager()
+    dataset_filetype = config.get("dataset_filetype").value
+    dataset_file_path = config.get("train_dataset_path").value
+    if device is None:
+        device = config.get("device").value or "cuda"
+
+    df = None
+    filetype = dataset_filetype.lstrip(".")
+    if filetype == "csv":
+        df = pd.read_csv(dataset_file_path)
+    elif filetype == "parquet":
+        df = pd.read_parquet(dataset_file_path)
+    elif filetype == "feather":
+        df = pd.read_feather(dataset_file_path)
+    else:
+        raise ValueError(f"Unsupported file type: {dataset_filetype}. Use csv, parquet, or feather.")
+
+    if get_config_manager().get("use_last_n_num").value:
+        df = df.tail(get_config_manager().get("use_last_n_num").value).reset_index(drop=True)
+
+    time_features = np.zeros((len(df), 4))
+    if "timestamp" in df.columns:
+        df['timestamp'] = pd.to_datetime(df['timestamp'])
+        time_features = _extract_time_features(df['timestamp'])
+        df = df.drop(columns=["timestamp"])
+
+    # order book data
+    for col in ["bid_volume", "ask_volume"]:
+        if col in df.columns:
+            df[col] = df[col].apply(lambda x: ast.literal_eval(x) if isinstance(x, str) else x)
+            prefix = col.split('_')[0] + "_"
+            # expend data
+            expanded = pd.DataFrame(df[col].tolist(), index=df.index).add_prefix(prefix)
+            # sum bid/ask volume
+            df[f'{prefix}sum'] = df[col].apply(sum)
+            df = pd.concat([df.drop(columns=[col]), expanded], axis=1)
+
+    # 4. amplify variance
+    # calculate bps
+    # fluctuation to open price
+    df['open_ret'] = df['open'].pct_change().fillna(0) * 1000
+    df['high_gap'] = (df['high'] / df['open'] - 1) * 1000
+    df['low_gap'] = (df['low'] / df['open'] - 1) * 1000
+    df['close_gap'] = (df['close'] / df['open'] - 1) * 1000
+
+    # bid/ask imbalance  (important，range [-1, 1])
+    df['imbalance'] = (df['bid_sum'] - df['ask_sum']) / (df['bid_sum'] + df['ask_sum'] + 1e-8)
+
+    # 5.Z-score
+    norm_cols = df.filter(regex='volume|sum|delta|bid_|ask_').columns
+    if get_config_manager().get("normalize").value:
+        df[norm_cols] = (df[norm_cols] - df[norm_cols].mean()) / (df[norm_cols].std() + 1e-8)
+
+    # 6. integrate features
+
+    feature_cols = ['open_ret', 'high_gap', 'low_gap', 'close_gap', 'imbalance', 'volume', 'delta']
+    # 加上展开的 10 档盘口
+    feature_cols += [c for c in df.columns if 'bid_' in c or 'ask_' in c]
+
+    # 转换为 Numpy 再合并时间特征
+    data_values = df[feature_cols].astype("float32").values
+    final_data = np.column_stack((data_values, time_features))
+
+    # 保存为 Tensor
+    data = torch.tensor(final_data, dtype=torch.float32, device=device)
+
+    # 这里的 close 价格需要单独保存一份，用于计算未来的 PP (利润)
+    # 注意：这里的 close 使用的是原始价格或对数价格，不能是 Z-score 后的
+
+    # look ahead
+
+    close_col = torch.tensor(df['close_gap'].values, dtype=torch.float32)
+    # padding
+    close_col = F.pad(close_col, (0, get_config_manager().get("num_look_ahead").value))
+
+    return data, close_col  # close_col not normalized
+
+
+class OHLCDataset(Dataset):
+    def __init__(self, data, close_col, device='cuda'):
+        # Load from config manager
+        config = get_config_manager()
+        seq_len = config.get("seq_len").value
+        sliding_step = config.get("sliding_step").value
+        pred_len_param = config.get("pred_len")
+        pred_len = pred_len_param.value if pred_len_param else 1
+        use_last_n = config.get("use_last_n").value
+        normalize = config.get("normalize").value
+        num_look_ahead = config.get("num_look_ahead").value
+        sliding_window = config.get("sliding_window").value
+
+        self.data = data
+        self.close_col = close_col
         self.seq_len = seq_len
         self.sliding_step = sliding_step
         self.pred_len = pred_len
         self.use_last_n = use_last_n
         self.normalize = normalize
         self.sliding_window = sliding_window
+        self.num_look_ahead = num_look_ahead
+        self.device = device
 
-        df = pd.read_csv(csv_path)
+        returns = self.close_col.diff()
+        self.volatility_50 = returns.rolling(50, min_periods=1).std()
 
-        # drop timestamp column
+        look_ahead_k = self.close_col.unfold(0, self.num_look_ahead + 1, 1)
+        look_ahead_k = look_ahead_k[:, 1:]  # remove itself, [N, K]
+        # generate dataset [L, C]
+        dataset_temp = []
+        reference_k_temp = []
+        if sliding_window:
+            # 计算可用样本量
+            self.num_samples = (len(self.data) - self.seq_len - self.num_look_ahead) // self.sliding_step + 1
+            for i in range(self.num_samples):
+                start = i * self.sliding_step
+                end = start + self.seq_len
+                dataset_temp.append(self.data[start:end])
+                reference_k_temp.append(look_ahead_k[start:end])
 
-        time_feature = None
-        if "timestamp" in df.columns:
-            df['timestamp'] = pd.to_datetime(df['timestamp'])
-            time_feature = self._extract_time_features(df['timestamp'])
-            df = df.drop(columns=["timestamp"])
+        else:
+            # 计算可用样本量
+            self.num_samples = len(self.data) - self.seq_len - self.num_look_ahead + 1
 
-        # replace timestamp to distance
-        # df.insert(0, 'distance', power_distance(np.arange(len(df))))
+            for i in range(self.num_samples):
+                start = i * self.seq_len
+                end = start + self.seq_len
+                dataset_temp.append(self.data[start: end])
+                reference_k_temp.append(look_ahead_k[start: end])
 
-        if use_last_n is not None:
-            df = df.tail(use_last_n).reset_index(drop=True)
-
-        # convert str to list
-        for col in ["bid_volume", "ask_volume"]:
-            if col in df.columns and df[col].dtype == str:
-                df[col] = df[col].apply(ast.literal_eval)
-                col_names = pd.DataFrame(df[col].tolist()).add_prefix('bid_')
-                df = pd.concat([df.drop(col), col_names], axis=1)
-
-        df.filter(like="ask_")[:] = -df.filter(like="ask_")
-
-        # to float32
-        data = df.astype("float32").values
-
-        # normalization
-        if normalize:
-            mean = data.mean(axis=0, keepdims=True)
-            std = data.std(axis=0, keepdims=True) + 1e-8
-            data = (data - mean) / std
-        data = np.column_stack((data, time_feature))
-
-        self.num_samples = (data.shape[0] - self.seq_len - self.pred_len) // self.sliding_step + 1
-        self.data = torch.tensor(data)
+        self.dataset = torch.stack(dataset_temp)
+        self.reference_k = torch.stack(reference_k_temp)
 
     def __len__(self):
         return self.num_samples
 
     def __getitem__(self, idx):
-        self.indices = torch.arange(self.data.size(0), device=self.data.size(0))
-        if self.sliding_window:
-            start = idx * self.sliding_step
-            end = start + self.seq_len
-            return self.data[start:end], self.indices[start:end]
-        else:
-            return self.data[idx: idx + self.seq_len], self.indices[idx: idx + self.seq_len + self]
-
-    def _extract_time_features(self, dates):
-        """ convert timestamp to periodic time feature  (scale to [-0.5, 0.5])"""
-        df_stamp = pd.DataFrame()
-        df_stamp['month'] = dates.dt.month / 12 - 0.5
-        df_stamp['day'] = dates.dt.day / 31 - 0.5
-        df_stamp['weekday'] = dates.dt.weekday / 7 - 0.5
-        df_stamp['hour'] = dates.dt.hour / 24 - 0.5
-        return df_stamp.values
+        return self.dataset[idx], self.reference_k[idx], self.volatility_50[idx]  # [L, C], [K], 1
 
 
-# download file
-aggregated_trades_file_path = '../data/Binance_BTC_USDT_USDT_3m.csv'
-
-aggregated_trades_bucket_path = 'aggTrades/BTCUSDT'
-aggregated_trades_bucket_name = 'binance-histrial-files'
-
-if not os.path.exists(aggregated_trades_file_path):
-    latest_path = get_latest_blob_path(aggregated_trades_bucket_name,
-                                       f"{aggregated_trades_bucket_path}/BTCUSDT-aggTrades-")
-    download_blob(aggregated_trades_bucket_name, latest_path, aggregated_trades_file_path)
-
-aggregated_trades = pd.read_parquet(aggregated_trades_file_path)
-
-logging.info(f"read aggregated trades")
-
-logging.info(f"Columns: {aggregated_trades.columns.to_list()}")
-
-logging.info(f"Shape: {aggregated_trades.shape}")
-
-logging.info(aggregated_trades.sample(2))
-
-# aggregated_trades = aggregated_trades.to_numpy()
