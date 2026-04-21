@@ -167,33 +167,33 @@ class OHLCDataset(Dataset):
         self.reference_k = torch.stack(reference_k_temp)
 
 
-        pad_in_len = ceil(1.0 * self.num_samples / seq_len) * seq_len
-        in_len_add = int(pad_in_len - self.num_samples)
-
-        if in_len_add > 0:
-            # 2. 计算“完整段”的截止点
-            inact_num = self.num_samples // seq_len
-
-            # 3. 分别对三个属性进行“尾部重叠拼接”
-            # 这样做是为了确保每一个 Tensor 的第一维 (L) 都能对齐
-            self.dataset = torch.cat([
-                self.dataset[:inact_num],
-                self.dataset[self.num_samples - seq_len:]
-            ], dim=0)
-
-            self.reference_k = torch.cat([
-                self.dataset[:inact_num],
-                self.dataset[self.num_samples - seq_len:]
-            ], dim=0)
-
-            self.volatility_50 = torch.cat([
-                self.dataset[:inact_num],
-                self.dataset[self.num_samples - seq_len:]
-            ], dim=0)
-
-            self.num_samples = pad_in_len
-
-            print(f"Dataset padded from {self.num_samples} to {self.dataset.size(0)}")
+        # pad_in_len = ceil(1.0 * self.num_samples / seq_len) * seq_len
+        # in_len_add = int(pad_in_len - self.num_samples)
+        #
+        # if in_len_add > 0:
+        #     # 2. 计算“完整段”的截止点
+        #     inact_num = self.num_samples // seq_len
+        #
+        #     # 3. 分别对三个属性进行“尾部重叠拼接”
+        #     # 这样做是为了确保每一个 Tensor 的第一维 (L) 都能对齐
+        #     self.dataset = torch.cat([
+        #         self.dataset[:inact_num],
+        #         self.dataset[self.num_samples - seq_len:]
+        #     ], dim=0)
+        #
+        #     self.reference_k = torch.cat([
+        #         self.dataset[:inact_num],
+        #         self.dataset[self.num_samples - seq_len:]
+        #     ], dim=0)
+        #
+        #     self.volatility_50 = torch.cat([
+        #         self.dataset[:inact_num],
+        #         self.dataset[self.num_samples - seq_len:]
+        #     ], dim=0)
+        #
+        #     self.num_samples = pad_in_len
+        #
+        #     print(f"Dataset padded from {self.num_samples} to {self.num_samples}")
 
     def __len__(self):
         return self.num_samples
