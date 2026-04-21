@@ -70,20 +70,17 @@ def train_crossformer_rl(run_id=None):
     loader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
 
 
-
     C = dataset[0][0].shape[-1]
 
     yield {
         "status": "initializing",
-        "log": f"Channels: {C}, Samples: {len(dataset)}",
+        "log": f"Channels: {C}, Samples: {dataset.num_samples}",
         "progress": 0.0,
         "loss": 0.0,
         "total_epochs": epochs,
     }
 
     dsw_embedding = DSW_embedding(seq_len, d_model).to(device=device)  # b d seg_num d_model
-
-    seg_num = dsw_embedding.shape[2]
 
 
     encoder = CrossformerEncoder(
@@ -94,7 +91,7 @@ def train_crossformer_rl(run_id=None):
         d_ff=dim_feedforward,
         num_tsa_layer=num_tsa_layer,
         dropout=dropout,
-        total_seg_num=seg_num,
+        total_seg_num=dataset.num_samples,
         factor=factor,
         router=router
     ).to(device)
