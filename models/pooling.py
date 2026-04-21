@@ -5,6 +5,8 @@ All pooling classes take input [B, C, T, d_model] and return [B, d_model].
 import torch
 import torch.nn as nn
 
+from controller.config_manager import get_config_manager
+
 
 class AttentionPooling(nn.Module):
     """
@@ -14,6 +16,9 @@ class AttentionPooling(nn.Module):
         super().__init__()
         self.time_decay = time_decay
         self.proj = nn.Linear(d_model, 1)
+        config = get_config_manager()
+        n_layers = config.get("n_layers").value
+        self.layer_weights = nn.Parameter(torch.ones(n_layers))
 
     def forward(self, x):  # x: List[[B, C, T, d]]
         x_out = []
