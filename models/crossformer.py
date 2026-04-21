@@ -67,17 +67,6 @@ def train_crossformer_rl(run_id=None):
     data, close_col = preprocess_dataframe()
     dataset = OHLCDataset(data, close_col, device=device)
 
-    total_dataset_size = len(dataset)
-
-    pad_in_len = ceil(1.0 * total_dataset_size / seq_len) * seq_len
-    pad_out_len = ceil(1.0 * total_dataset_size / seq_len) * seq_len
-    in_len_add = pad_in_len - total_dataset_size
-
-    if in_len_add > 0:
-        inact_seq = dataset[:-(seq_len - in_len_add)]
-        last_seq_len = dataset[-seq_len:]
-        dataset = torch.cat((inact_seq, last_seq_len))
-
     loader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
 
 

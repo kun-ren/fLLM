@@ -1,6 +1,8 @@
 import ast
 import os
 import logging
+from math import ceil
+
 import numpy as np
 
 # from config.googleCloud import download_blob, get_latest_blob_path
@@ -163,6 +165,36 @@ class OHLCDataset(Dataset):
 
         self.dataset = torch.stack(dataset_temp)
         self.reference_k = torch.stack(reference_k_temp)
+
+        total_len = self.dataset.size(0)
+
+
+        pad_in_len = ceil(1.0 * total_len / seq_len) * seq_len
+        in_len_add = int(pad_in_len - total_len)
+
+        if in_len_add > 0:
+            # 2. 计算“完整段”的截止点
+            # 公式：总长度 - (一个完整段还差多少)
+            split_idx = total_len - (seq_len - in_len_add)
+
+            # 3. 分别对三个属性进行“尾部重叠拼接”
+            # 这样做是为了确保每一个 Tensor 的第一维 (L) 都能对齐
+            self.dataset = torch.cat([
+                self.dataset[:split_idx],
+                self.dataset[-seq_len:]
+            ], dim=0)
+
+            self.reference_k = torch.cat([
+                self.reference_k[:split_idx],
+                self.reference_k[-seq_len:]
+            ], dim=0)
+
+            self.volatility_50 = torch.cat([
+                self.volatility_50[:split_idx],
+                self.volatility_50[-seq_len:]
+            ], dim=0)
+
+            print(f"Dataset padded from {total_len} to {self.dataset.size(0)}")
 
     def __len__(self):
         return self.num_samples
