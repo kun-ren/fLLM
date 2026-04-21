@@ -90,15 +90,15 @@ class Encoder(nn.Module):
     '''
 
     def __init__(self, num_encoder_layer, aggregation_level, d_model, n_heads, d_ff, num_tsa_layer, dropout,
-                 total_seg_num=10, factor=10, router=False):
+                 sequence_len=10, factor=10, router=False):
         super(Encoder, self).__init__()
         self.encode_blocks = nn.ModuleList()
 
         self.encode_blocks.append(scale_block(1, d_model, n_heads, d_ff, num_tsa_layer, dropout,
-                                              total_seg_num, factor, router=router))
+                                              sequence_len, factor, router=router))
         for i in range(1, num_encoder_layer):
             self.encode_blocks.append(scale_block(aggregation_level, d_model, n_heads, d_ff, num_tsa_layer, dropout,
-                                                  ceil(total_seg_num / aggregation_level ** i), factor, router=router))
+                                                  ceil(sequence_len / aggregation_level ** i), factor, router=router))
 
     def forward(self, x):
         encode_x = []

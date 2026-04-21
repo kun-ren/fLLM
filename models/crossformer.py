@@ -80,7 +80,7 @@ def train_crossformer_rl(run_id=None):
         "total_epochs": epochs,
     }
 
-    dsw_embedding = DSW_embedding(seq_len, d_model).to(device=device)  # b d seg_num d_model
+    dsw_embedding = DSW_embedding(seg_len=1, d_model=d_model).to(device=device)  # b d seg_num d_model
 
 
     encoder = CrossformerEncoder(
@@ -91,7 +91,7 @@ def train_crossformer_rl(run_id=None):
         d_ff=dim_feedforward,
         num_tsa_layer=num_tsa_layer,
         dropout=dropout,
-        total_seg_num=dataset.num_samples,
+        sequence_len=seq_len,
         factor=factor,
         router=router
     ).to(device)
