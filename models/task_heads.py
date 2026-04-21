@@ -39,8 +39,8 @@ class ReversalHead(nn.Module):
         Returns:
             reversal_confidence: [B, 1] in [-1, 1]
         """
-        pooled = self.pooling(embedding)  # [B, d_model]
-        return self.mlp(pooled)  # [B, 1]
+        #pooled = self.pooling(embedding)  # [B, d_model]
+        return self.mlp(embedding)  # [B, 1]
 
 
 class LongTermTrendHead(nn.Module):
@@ -165,7 +165,6 @@ class SupportHead(nn.Module):
     def __init__(self, d_model, hidden_dim=128, dropout=0.2, pooling="AttentionPooling"):
         super().__init__()
         self.pooling = build_pooling(pooling, d_model)
-
         self.mlp = nn.Sequential(
             nn.Linear(d_model, hidden_dim),
             nn.GELU(),

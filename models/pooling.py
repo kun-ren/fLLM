@@ -15,19 +15,22 @@ class AttentionPooling(nn.Module):
         self.time_decay = time_decay
         self.proj = nn.Linear(d_model, 1)
 
-    def forward(self, x):  # [B, C, T, d]
-        B, C, T, d = x.shape
+    def forward(self, x):  # [[B, C, T, d]]
+        x_out = []
+        for x_layer in x:
+            B, C, T, d = x_layer.shape
 
-        var_score = self.proj(x)  # to [B, C, T, 1]
+            var_score = self.proj(x_layer)  # to [B, C, T, 1]
 
-        # weighted pooling
-        var_weights = torch.softmax(var_score, dim=1)
-        x_var = torch.sum(x * var_weights, dim=1)  # [B, T, d]
+            # weighted pooling
+            var_weights = torch.softmax(var_score, dim=1)
+            x_var = torch.sum(x_layer * var_weights, dim=1)  # [B, T, d]
 
-        # temporal sequence weight
-        time_weights = self.get_time_weights(T, x.device)  # [T]
-        x_time = (x_var * time_weights.view(1, T, 1)).sum(dim=1)  # [B, d]
-        return x_time
+            # temporal sequence weight
+            time_weights = self.get_time_weights(T, x_layer.device)  # [T]
+            x_out.append((x_var * time_weights.view(1, T, 1)).sum(dim=1))  # [B, d]
+
+        return torch.stack(x_out, dim=1)
 
     def get_time_weights(self, T, device):
         """
