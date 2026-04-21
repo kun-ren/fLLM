@@ -30,7 +30,7 @@ class AttentionPooling(nn.Module):
             time_weights = self.get_time_weights(T, x_layer.device)  # [T]
             x_out.append((x_var * time_weights.view(1, T, 1)).sum(dim=1))  # [B, d]
 
-        return torch.stack(x_out, dim=0)
+        return torch.stack(x_out, dim=0).to('cuda')
 
     def get_time_weights(self, T, device):
         """

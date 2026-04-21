@@ -268,4 +268,4 @@ def build_task_head(task_type, d_model, pred_len=24, hidden_dim=128, dropout=0.2
         available = ", ".join(heads.keys())
         raise ValueError(f"Unknown task type '{task_type}'. Available: {available}")
 
-    return heads[task_type]()
+    return heads[task_type]().to('cuda')
