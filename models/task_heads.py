@@ -39,8 +39,8 @@ class ReversalHead(nn.Module):
         Returns:
             reversal_confidence: [B, 1] in [-1, 1]
         """
-        #pooled = self.pooling(embedding)  # [B, d_model]
-        return self.mlp(embedding)  # [B, 1]
+        pooled = self.pooling(embedding)  # [B, d_model]
+        return self.mlp(pooled)  # [B, 1]
 
 
 class LongTermTrendHead(nn.Module):
