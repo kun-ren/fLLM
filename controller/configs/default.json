@@ -131,7 +131,7 @@
   },
   "aggregation_level": {
     "name": "aggregation_level",
-    "value": 4,
+    "value": 2,
     "min_val": 2,
     "max_val": 10,
     "step": 1,

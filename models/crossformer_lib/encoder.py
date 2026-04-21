@@ -26,6 +26,7 @@ class SegMerging(nn.Module):
         """
         x: B, ts_d, L, d_model
         """
+
         batch_size, ts_d, seg_num, d_model = x.shape
         pad_num = seg_num % self.aggregation_level
         if pad_num != 0:

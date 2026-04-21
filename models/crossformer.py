@@ -1,4 +1,5 @@
 import logging
+from math import ceil
 from pathlib import Path
 
 import torch
@@ -65,7 +66,21 @@ def train_crossformer_rl(run_id=None):
 
     data, close_col = preprocess_dataframe()
     dataset = OHLCDataset(data, close_col, device=device)
+
+    total_dataset_size = len(dataset)
+
+    pad_in_len = ceil(1.0 * total_dataset_size / seq_len) * seq_len
+    pad_out_len = ceil(1.0 * total_dataset_size / seq_len) * seq_len
+    in_len_add = pad_in_len - total_dataset_size
+
+    if in_len_add > 0:
+        inact_seq = dataset[:-(seq_len - in_len_add)]
+        last_seq_len = dataset[-seq_len:]
+        dataset = torch.cat((inact_seq, last_seq_len))
+
     loader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
+
+
 
     C = dataset[0][0].shape[-1]
 
@@ -77,6 +92,11 @@ def train_crossformer_rl(run_id=None):
         "total_epochs": epochs,
     }
 
+    dsw_embedding = DSW_embedding(seq_len, d_model).to(device=device)  # b d seg_num d_model
+
+    seg_num = dsw_embedding.shape[2]
+
+
     encoder = CrossformerEncoder(
         num_encoder_layer=n_layers,
         aggregation_level=aggregation_level,
@@ -85,12 +105,10 @@ def train_crossformer_rl(run_id=None):
         d_ff=dim_feedforward,
         num_tsa_layer=num_tsa_layer,
         dropout=dropout,
-        total_seg_num=len(loader),
+        total_seg_num=seg_num,
         factor=factor,
         router=router
     ).to(device)
-
-    dsw_embedding = DSW_embedding(seq_len, d_model).to(device=device)
 
     taskheads = MultiTaskHead(
         heads=['reversal', 'support', 'resistance'],
