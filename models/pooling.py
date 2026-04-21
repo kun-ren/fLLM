@@ -41,8 +41,10 @@ class AttentionPooling(nn.Module):
         x_stack = torch.stack(x_out, dim=1)  # [B, L, d]
 
         L = x_stack.shape[1]
-        weights = torch.softmax(self.layer_weights[:L], dim=0)
+        if not hasattr(self, "layer_weights") or self.layer_weights.shape[0] != L:
+            self.layer_weights = nn.Parameter(torch.ones(L, device=x_stack.device))
 
+        weights = torch.softmax(self.layer_weights, dim=0)
         x_fused = (x_stack * weights.view(1, L, 1)).sum(dim=1)
 
         return x_fused
