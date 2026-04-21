@@ -40,10 +40,10 @@ class AttentionPooling(nn.Module):
         # ===== Stack layers (关键修复点) =====
         x_stack = torch.stack(x_out, dim=1)  # [B, L, d]
 
-        # ===== Learnable layer fusion =====
-        weights = torch.softmax(self.layer_weights, dim=0)  # [L]
+        L = x_stack.shape[1]
+        weights = torch.softmax(self.layer_weights[:L], dim=0)
 
-        x_fused = (x_stack * weights.view(1, -1, 1)).sum(dim=1)  # [B, d]
+        x_fused = (x_stack * weights.view(1, L, 1)).sum(dim=1)
 
         return x_fused
 
